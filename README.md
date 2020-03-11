@@ -75,6 +75,8 @@
 
 #### 5. SpringCloud集成Seata
 
+> [github源码参考地址](https://github.com/FocusProgram/springcloud-seata/tree/master/springcloud-jpa-seata)
+
 ##### 5.1 运行Seata
 
 ###### 5.1.1 Seata下载地址 [https://github.com/seata/seata/releases](https://github.com/seata/seata/releases)
@@ -119,9 +121,102 @@ nohup sh seata-server.sh -p 8091 -h 127.0.0.1 -m file &> seata.log &            
 >
 > --storeMOde -m 日志存储方式（file、db）,默认file
 
-##### 5.2 导入sql脚本
+##### 5.2 初始化sql脚本
 
-[sql脚本下载地址](https://github.com/FocusProgram/springcloud-seata/blob/master/springcloud-jpa-seata/sql/all_in_one.sql)
+```
+# Account
+DROP SCHEMA IF EXISTS db_account;
+CREATE SCHEMA db_account;
+USE db_account;
+
+CREATE TABLE `account_tbl`
+(
+    `id`      INT(11) NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(255) DEFAULT NULL,
+    `money`   INT(11)      DEFAULT 0,
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8;
+
+INSERT INTO account_tbl (id, user_id, money)
+VALUES (1, '1001', 10000);
+INSERT INTO account_tbl (id, user_id, money)
+VALUES (2, '1002', 10000);
+
+CREATE TABLE `undo_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` bigint(20) NOT NULL,
+  `xid` varchar(100) NOT NULL,
+  `context` varchar(128) NOT NULL,
+  `rollback_info` longblob NOT NULL,
+  `log_status` int(11) NOT NULL,
+  `log_created` datetime NOT NULL,
+  `log_modified` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+# Order
+DROP SCHEMA IF EXISTS db_order;
+CREATE SCHEMA db_order;
+USE db_order;
+
+CREATE TABLE `order_tbl`
+(
+    `id`             INT(11) NOT NULL AUTO_INCREMENT,
+    `user_id`        VARCHAR(255) DEFAULT NULL,
+    `commodity_code` VARCHAR(255) DEFAULT NULL,
+    `count`          INT(11)      DEFAULT '0',
+    `money`          INT(11)      DEFAULT '0',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8;
+
+CREATE TABLE `undo_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` bigint(20) NOT NULL,
+  `xid` varchar(100) NOT NULL,
+  `context` varchar(128) NOT NULL,
+  `rollback_info` longblob NOT NULL,
+  `log_status` int(11) NOT NULL,
+  `log_created` datetime NOT NULL,
+  `log_modified` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+# Storage
+DROP SCHEMA IF EXISTS db_storage;
+CREATE SCHEMA db_storage;
+USE db_storage;
+
+CREATE TABLE `storage_tbl`
+(
+    `id`             INT(11) NOT NULL AUTO_INCREMENT,
+    `commodity_code` VARCHAR(255) DEFAULT NULL,
+    `count`          INT(11)      DEFAULT '0',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `commodity_code` (`commodity_code`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8;
+
+
+INSERT INTO storage_tbl (id, commodity_code, count)
+VALUES (1, '2001', 1000);
+
+CREATE TABLE `undo_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` bigint(20) NOT NULL,
+  `xid` varchar(100) NOT NULL,
+  `context` varchar(128) NOT NULL,
+  `rollback_info` longblob NOT NULL,
+  `log_status` int(11) NOT NULL,
+  `log_created` datetime NOT NULL,
+  `log_modified` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+```
 
 ##### 5.3 项目结构
 
@@ -223,6 +318,281 @@ curl http://127.0.0.1:8084/purchase/rollback
 ```
 
 > 此时 account-service 会抛出异常，发生回滚，待完成后数据库中的数据没有发生变化，回滚成功
+
+#### 6. SpringCloud集成Seata+Nacos
+
+> [github源码参考地址](https://github.com/FocusProgram/springcloud-seata/tree/master/springcloud-nacos-seata)
+
+##### 6.1 运行Seata
+
+###### 6.1.1 编辑配置文件conf/registry.conf
+
+> 注：serverAddr不能带‘http://’前缀
+
+```
+registry {
+  # file 、nacos 、eureka、redis、zk、consul、etcd3、sofa
+  type = "nacos"
+
+  nacos {
+    serverAddr = "114.55.34.44"
+    namespace = ""
+    cluster = "default"
+  }
+}
+config {
+  # file、nacos 、apollo、zk、consul、etcd3
+  type = "nacos"
+  nacos {
+    serverAddr = "114.55.34.44"
+    namespace = ""
+    cluster = "default"
+  }
+}
+```
+
+###### 6.1.2 编辑配置文件conf/nacos-config.txt(仅限seata-service-1.1.0版本以下)
+
+service.vgroup_mapping.${your-service-gruop}=default，中间的${your-service-gruop}为自己定义的服务组名称，服务中的application.properties文件里配置服务组名称。
+
+demo中有两个服务，分别是storage-service和order-service，所以配置如下:
+
+```
+service.vgroup_mapping.storage-service-group=default
+service.vgroup_mapping.order-service-group=default
+```
+
+初始化seata的nacos配置：
+
+```
+cd conf
+sh nacos-config.sh 114.55.34.44  #114.55.34.44为nacos的服务器地址
+```
+
+seata-service-1.1.0版本在Nacos手动添加配置:
+
+```
+service.vgroupMapping.storage-service-group=default
+service.vgroupMapping.order-service-group=default
+```
+
+启动seata-service:
+
+```
+cd bin
+sh seata-server.sh -p 8091 -m file
+```
+
+成功启动后显示如下：
+
+![](https://gitee.com/FocusProgram/PicGo/raw/master/20200311205043.png)
+
+![](https://gitee.com/FocusProgram/PicGo/raw/master/20200311205111.png)
+
+###### 6.1.3 初始化sql脚本
+
+```
+-- 创建 order库、业务表、undo_log表
+create database seata_order;
+use seata_order;
+
+DROP TABLE IF EXISTS `order_tbl`;
+CREATE TABLE `order_tbl` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(255) DEFAULT NULL,
+  `commodity_code` varchar(255) DEFAULT NULL,
+  `count` int(11) DEFAULT 0,
+  `money` int(11) DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `undo_log`
+(
+  `id`            BIGINT(20)   NOT NULL AUTO_INCREMENT,
+  `branch_id`     BIGINT(20)   NOT NULL,
+  `xid`           VARCHAR(100) NOT NULL,
+  `context`       VARCHAR(128) NOT NULL,
+  `rollback_info` LONGBLOB     NOT NULL,
+  `log_status`    INT(11)      NOT NULL,
+  `log_created`   DATETIME     NOT NULL,
+  `log_modified`  DATETIME     NOT NULL,
+  `ext`           VARCHAR(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`, `branch_id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8;
+
+
+-- 创建 storage库、业务表、undo_log表
+create database seata_storage;
+use seata_storage;
+
+DROP TABLE IF EXISTS `storage_tbl`;
+CREATE TABLE `storage_tbl` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `commodity_code` varchar(255) DEFAULT NULL,
+  `count` int(11) DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY (`commodity_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `undo_log`
+(
+  `id`            BIGINT(20)   NOT NULL AUTO_INCREMENT,
+  `branch_id`     BIGINT(20)   NOT NULL,
+  `xid`           VARCHAR(100) NOT NULL,
+  `context`       VARCHAR(128) NOT NULL,
+  `rollback_info` LONGBLOB     NOT NULL,
+  `log_status`    INT(11)      NOT NULL,
+  `log_created`   DATETIME     NOT NULL,
+  `log_modified`  DATETIME     NOT NULL,
+  `ext`           VARCHAR(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`, `branch_id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8;
+
+-- 初始化库存模拟数据
+INSERT INTO seata_storage.storage_tbl (id, commodity_code, count) VALUES (1, 'product-1', 9999999);
+INSERT INTO seata_storage.storage_tbl (id, commodity_code, count) VALUES (2, 'product-2', 0);
+```
+
+###### 6.1.4 引入maven依赖
+
+```
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <optional>true</optional>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+
+<!-- nacos -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+    <version>0.2.1.RELEASE</version>
+</dependency>
+
+<!-- seata-->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-alibaba-seata</artifactId>
+    <version>2.1.0.RELEASE</version>
+</dependency>
+<dependency>
+    <groupId>io.seata</groupId>
+    <artifactId>seata-all</artifactId>
+    <version>1.1.0</version>
+</dependency>
+
+<!-- mysql -->
+<dependency>
+    <groupId>com.work</groupId>
+    <artifactId>base-framework-mysql-support</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
+###### 6.1.5 配置文件registy.conf
+
+```
+registry {
+  # file 、nacos 、eureka、redis、zk、consul、etcd3、sofa
+  type = "nacos"
+
+  nacos {
+    serverAddr = "114.55.34.44"
+    namespace = ""
+    cluster = "default"
+  }
+}
+config {
+  # file、nacos 、apollo、zk、consul、etcd3
+  type = "nacos"
+  nacos {
+    serverAddr = "114.55.34.44"
+    namespace = ""
+    cluster = "default"
+  }
+}
+```
+
+###### 6.1.6 配置文件application.properties
+
+**order-service**
+
+```
+spring.application.name=order-service
+server.port=9091
+
+# Nacos 注册中心地址
+spring.cloud.nacos.discovery.server-addr = 114.55.34.44:8848
+
+# seata 服务分组，要与服务端nacos-config.txt中service.vgroup_mapping的后缀对应
+spring.cloud.alibaba.seata.tx-service-group=order-service-group
+logging.level.io.seata = debug
+
+# 数据源配置
+spring.datasource.druid.url=jdbc:mysql://114.55.34.44:3306/seata_order?allowMultiQueries=true
+spring.datasource.druid.driverClassName=com.mysql.jdbc.Driver
+spring.datasource.druid.username=root
+spring.datasource.druid.password=root
+```
+
+**storage-service**
+```
+spring.application.name=storage-service
+server.port=9092
+
+# Nacos 注册中心地址
+spring.cloud.nacos.discovery.server-addr = 114.55.34.44:8848
+
+# seata 服务分组，要与服务端nacos-config.txt中service.vgroup_mapping的后缀对应
+spring.cloud.alibaba.seata.tx-service-group=storage-service-group
+logging.level.io.seata = debug
+
+# 数据源配置
+spring.datasource.druid.url=jdbc:mysql://114.55.34.44:3306/seata_storage?allowMultiQueries=true
+spring.datasource.druid.driverClassName=com.mysql.jdbc.Driver
+spring.datasource.druid.username=root
+spring.datasource.druid.password=root
+```
+
+###### 6.1.7 启动项目
+
+![](https://gitee.com/FocusProgram/PicGo/raw/master/20200312000829.png)
+
+###### 6.1.8 测试
+
+分布式事务成功，模拟正常下单、扣库存
+
+```
+curl localhost:9091/order/placeOrder/commit
+```
+
+分布式事务失败，模拟下单成功、扣库存失败，最终同时回滚
+
+```
+curl localhost:9091/order/placeOrder/rollback
+```
+
+
+
 
 
 

@@ -10,16 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-/**
- * Program Name: springcloud-nacos-seata
- * <p>
- * Description:
- * <p>
- *
- * @author zhangjianwei
- * @version 1.0
- * @date 2019/8/28 4:05 PM
- */
+
 @Service
 public class OrderService {
 
