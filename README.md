@@ -6,7 +6,35 @@
 
 - **文章目录**
 
-[TOC]
+* [1\. 什么是Seata?](#1-%E4%BB%80%E4%B9%88%E6%98%AFseata)
+* [2\. 发展历史](#2-%E5%8F%91%E5%B1%95%E5%8E%86%E5%8F%B2)
+* [3\. 微服务中的分布式事务问题](#3-%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B8%AD%E7%9A%84%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E9%97%AE%E9%A2%98)
+* [4\. Seata如何解决分布式事务？](#4-seata%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1)
+  * [4\.1 Seata解决分布式事务设计原理：](#41-seata%E8%A7%A3%E5%86%B3%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E8%AE%BE%E8%AE%A1%E5%8E%9F%E7%90%86)
+  * [4\.2 如何定义分布式事务：](#42-%E5%A6%82%E4%BD%95%E5%AE%9A%E4%B9%89%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1)
+  * [4\.3 Seata有3个基本组件：](#43-seata%E6%9C%893%E4%B8%AA%E5%9F%BA%E6%9C%AC%E7%BB%84%E4%BB%B6)
+  * [4\.4 Seata管理分布式事务的典型生命周期：](#44-seata%E7%AE%A1%E7%90%86%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%9A%84%E5%85%B8%E5%9E%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
+* [5\. SpringCloud集成Seata](#5-springcloud%E9%9B%86%E6%88%90seata)
+  * [5\.1 运行Seata](#51-%E8%BF%90%E8%A1%8Cseata)
+    * [5\.1\.1 Seata下载地址 <a href="https://github\.com/seata/seata/releases">https://github\.com/seata/seata/releases</a>](#511-seata%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80-httpsgithubcomseataseatareleases)
+    * [5\.1\.2 Seata配置文件](#512-seata%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+    * [5\.1\.3 运行Seata](#513-%E8%BF%90%E8%A1%8Cseata)
+  * [5\.2 初始化sql脚本](#52-%E5%88%9D%E5%A7%8B%E5%8C%96sql%E8%84%9A%E6%9C%AC)
+  * [5\.3 项目结构](#53-%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84)
+  * [5\.4 引入maven依赖](#54-%E5%BC%95%E5%85%A5maven%E4%BE%9D%E8%B5%96)
+  * [5\.5 配置文件](#55-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+  * [5\.6 启动项目，显示如下证明启动成功：](#56-%E5%90%AF%E5%8A%A8%E9%A1%B9%E7%9B%AE%E6%98%BE%E7%A4%BA%E5%A6%82%E4%B8%8B%E8%AF%81%E6%98%8E%E5%90%AF%E5%8A%A8%E6%88%90%E5%8A%9F)
+  * [5\.7 测试：](#57-%E6%B5%8B%E8%AF%95)
+* [6\. SpringCloud集成Seata\+Nacos](#6-springcloud%E9%9B%86%E6%88%90seatanacos)
+  * [6\.1 运行Seata](#61-%E8%BF%90%E8%A1%8Cseata)
+    * [6\.1\.1 编辑配置文件conf/registry\.conf](#611-%E7%BC%96%E8%BE%91%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6confregistryconf)
+    * [6\.1\.2 编辑配置文件conf/nacos\-config\.txt(仅限seata\-service\-1\.1\.0版本以下)](#612-%E7%BC%96%E8%BE%91%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6confnacos-configtxt%E4%BB%85%E9%99%90seata-service-110%E7%89%88%E6%9C%AC%E4%BB%A5%E4%B8%8B)
+    * [6\.1\.3 初始化sql脚本](#613-%E5%88%9D%E5%A7%8B%E5%8C%96sql%E8%84%9A%E6%9C%AC)
+    * [6\.1\.4 引入maven依赖](#614-%E5%BC%95%E5%85%A5maven%E4%BE%9D%E8%B5%96)
+    * [6\.1\.5 配置文件registy\.conf](#615-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6registyconf)
+    * [6\.1\.6 配置文件application\.properties](#616-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6applicationproperties)
+    * [6\.1\.7 启动项目](#617-%E5%90%AF%E5%8A%A8%E9%A1%B9%E7%9B%AE)
+    * [6\.1\.8 测试](#618-%E6%B5%8B%E8%AF%95)
 
 ## 1. 什么是Seata?
 
