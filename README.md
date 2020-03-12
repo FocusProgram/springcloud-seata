@@ -623,6 +623,8 @@ curl localhost:9091/order/placeOrder/commit
 curl localhost:9091/order/placeOrder/rollback
 ```
 
+> 更多注册中心以及框架集成，[参考文档](https://github.com/seata/seata-samples)
+
 
 
 
