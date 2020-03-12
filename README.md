@@ -4,12 +4,16 @@
 
 ---
 
-#### 1. 什么是Seata?
+[TOC]
+
+# 文章目录
+
+## 1. 什么是Seata?
 
 > [Seata](https://github.com/seata/seata) 是一款开源的分布式事务解决方案，致力于提供高性能和简单易用的分布式事务服务。Seata 将为用户提供了 AT、TCC、SAGA 和 XA
 事务模式，为用户打造一站式的分布式解决方案。微服务体系结构具有高性能和易于使用的分布式事务解决方案
 
-#### 2. 发展历史
+## 2. 发展历史
 
 **蚂蚁金服：**
   
@@ -27,7 +31,7 @@
 
 - Seata：简单可扩展的自治事务架构。 蚂蚁金服加入了 Fescar，使它成为一个更加中立和开放的分布式交易社区，而 Fescar 被重命名为 Seata
 
-#### 3. 微服务中的分布式事务问题
+## 3. 微服务中的分布式事务问题
 
 传统的单体应用的场景——电商购物。 其业务由3个模块构成（库存、订单和账户），这三个模块使用各自的本地数据源。
 
@@ -39,19 +43,19 @@
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/68747470733a2f2f63646e2e6e6c61726b2e636f6d2f6c61726b2f302f323031382f706e672f31383836322f313534353239363738313233312d34303239646139632d383830332d343361342d616332662d3663386231653265613434382e706e67.png)
 
-#### 4. Seata如何解决分布式事务？
+## 4. Seata如何解决分布式事务？
 
-##### 4.1 Seata解决分布式事务设计原理：
+### 4.1 Seata解决分布式事务设计原理：
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/68747470733a2f2f63646e2e6e6c61726b2e636f6d2f6c61726b2f302f323031382f706e672f31383836322f313534353239363739313037342d33626365376263652d303235652d343563332d393338362d3762393531333564616465382e706e67.png)
 
-##### 4.2 如何定义分布式事务：
+### 4.2 如何定义分布式事务：
 
 > 分布式事务是由一批分支事务组成的全局事务，通常分支事务就是本地事务。
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/68747470733a2f2f63646e2e6e6c61726b2e636f6d2f6c61726b2f302f323031382f706e672f31383836322f313534353031353435343937392d61313865313666362d656434312d343466312d396337612d6264383263346435666639392e706e67.png)
 
-##### 4.3 Seata有3个基本组件：
+### 4.3 Seata有3个基本组件：
 
 - 事务协调器（TC）：维护全局和分支事务的状态，驱动全局提交或回滚。
 - 事务管理器（TM）：定义全局事务的范围：开始全局事务，提交或回滚全局事务。
@@ -59,7 +63,7 @@
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/68747470733a2f2f63646e2e6e6c61726b2e636f6d2f6c61726b2f302f323031382f706e672f31383836322f313534353031333931353238362d34613930663064662d356664612d343165312d393165302d3261613364333331633033352e706e67.png)
 
-##### 4.4 Seata管理分布式事务的典型生命周期：
+### 4.4 Seata管理分布式事务的典型生命周期：
 
 - TM要求TC开始新的全局事务。 TC生成表示全局事务的XID。
 
@@ -73,15 +77,15 @@
  
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/68747470733a2f2f63646e2e6e6c61726b2e636f6d2f6c61726b2f302f323031382f706e672f31383836322f313534353239363931373838312d32366661626562392d373166612d346633652d386137612d6663333137643333383966342e706e67.png)
 
-#### 5. SpringCloud集成Seata
+## 5. SpringCloud集成Seata
 
 > [github源码参考地址](https://github.com/FocusProgram/springcloud-seata/tree/master/springcloud-jpa-seata)
 
-##### 5.1 运行Seata
+### 5.1 运行Seata
 
-###### 5.1.1 Seata下载地址 [https://github.com/seata/seata/releases](https://github.com/seata/seata/releases)
+#### 5.1.1 Seata下载地址 [https://github.com/seata/seata/releases](https://github.com/seata/seata/releases)
 
-###### 5.1.2 Seata配置文件
+#### 5.1.2 Seata配置文件
 
 > seata server所有的配置都在conf文件夹内，该文件夹内有两个文件我们必须要详细介绍下。
 >
@@ -99,7 +103,7 @@ seata server核心配置文件，可以通过该文件配置服务注册方式�
 
 读取配置信息的方式支持file、nacos 、apollo、zk、consul、etcd3等方式，默认为file，对应读取file.conf文件内的配置。
 
-###### 5.1.3 运行Seata
+#### 5.1.3 运行Seata
 
 **windows环境下**
 
@@ -121,7 +125,7 @@ nohup sh seata-server.sh -p 8091 -h 127.0.0.1 -m file &> seata.log &            
 >
 > --storeMOde -m 日志存储方式（file、db）,默认file
 
-##### 5.2 初始化sql脚本
+### 5.2 初始化sql脚本
 
 ```
 # Account
@@ -218,7 +222,7 @@ CREATE TABLE `undo_log` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 ```
 
-##### 5.3 项目结构
+### 5.3 项目结构
 
 - order-servie 订单服务
 - business-service 商户服务
@@ -227,7 +231,7 @@ CREATE TABLE `undo_log` (
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200311152423.png)
 
-##### 5.3 引入maven依赖
+### 5.4 引入maven依赖
 
 ```
 <dependency>
@@ -257,7 +261,7 @@ CREATE TABLE `undo_log` (
 </dependency>
 ```
 
-##### 5.4 配置文件
+### 5.5 配置文件
 
 > file.conf 的 service.vgroup_mapping 配置必须和spring.application.name一致
 在 org.springframework.cloud:spring-cloud-starter-alibaba-seata的org.springframework.cloud.alibaba.seata.GlobalTransactionAutoConfiguration类中，默认会使用 ${spring.application.name}-fescar-service-group作为服务名注册到 Seata Server上，如果和file.conf中的配置不一致，会提示 no available server to connect错误
@@ -291,7 +295,7 @@ service {
 }
 ```
 
-##### 5.5 启动项目，显示如下证明启动成功：
+### 5.6 启动项目，显示如下证明启动成功：
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200311154701.png)
 
@@ -301,7 +305,7 @@ service {
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200311154749.png)
 
-##### 5.6 测试：
+### 5.7 测试：
 
 无错误成功提交：
 
@@ -319,13 +323,13 @@ curl http://127.0.0.1:8084/purchase/rollback
 
 > 此时 account-service 会抛出异常，发生回滚，待完成后数据库中的数据没有发生变化，回滚成功
 
-#### 6. SpringCloud集成Seata+Nacos
+## 6. SpringCloud集成Seata+Nacos
 
 > [github源码参考地址](https://github.com/FocusProgram/springcloud-seata/tree/master/springcloud-nacos-seata)
 
-##### 6.1 运行Seata
+### 6.1 运行Seata
 
-###### 6.1.1 编辑配置文件conf/registry.conf
+#### 6.1.1 编辑配置文件conf/registry.conf
 
 > 注：serverAddr不能带‘http://’前缀
 
@@ -351,7 +355,7 @@ config {
 }
 ```
 
-###### 6.1.2 编辑配置文件conf/nacos-config.txt(仅限seata-service-1.1.0版本以下)
+#### 6.1.2 编辑配置文件conf/nacos-config.txt(仅限seata-service-1.1.0版本以下)
 
 service.vgroup_mapping.${your-service-gruop}=default，中间的${your-service-gruop}为自己定义的服务组名称，服务中的application.properties文件里配置服务组名称。
 
@@ -389,7 +393,7 @@ sh seata-server.sh -p 8091 -m file
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200311205111.png)
 
-###### 6.1.3 初始化sql脚本
+#### 6.1.3 初始化sql脚本
 
 ```
 -- 创建 order库、业务表、undo_log表
@@ -459,7 +463,7 @@ INSERT INTO seata_storage.storage_tbl (id, commodity_code, count) VALUES (1, 'pr
 INSERT INTO seata_storage.storage_tbl (id, commodity_code, count) VALUES (2, 'product-2', 0);
 ```
 
-###### 6.1.4 引入maven依赖
+#### 6.1.4 引入maven依赖
 
 ```
 <dependency>
@@ -508,7 +512,7 @@ INSERT INTO seata_storage.storage_tbl (id, commodity_code, count) VALUES (2, 'pr
 </dependency>
 ```
 
-###### 6.1.5 配置文件registy.conf
+#### 6.1.5 配置文件registy.conf
 
 ```
 registry {
@@ -532,7 +536,7 @@ config {
 }
 ```
 
-###### 6.1.6 配置文件application.properties
+#### 6.1.6 配置文件application.properties
 
 **order-service**
 
@@ -573,11 +577,11 @@ spring.datasource.druid.username=root
 spring.datasource.druid.password=root
 ```
 
-###### 6.1.7 启动项目
+#### 6.1.7 启动项目
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200312000829.png)
 
-###### 6.1.8 测试
+#### 6.1.8 测试
 
 分布式事务成功，模拟正常下单、扣库存
 
